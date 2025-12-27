@@ -1,0 +1,70 @@
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5); 
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+
+.deliverable-form {
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background-color: rgba(255, 255, 255, 0.9);
+  max-width: 400px; 
+  margin: auto;
+  align-items: center;
+  justify-content: center;
+  display: flex;
+  flex-direction: column;
+}
+
+.deliverable-form form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.deliverable-form input[type="text"],
+.deliverable-form input[type="date"],
+.deliverable-form textarea {
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  width: 100%;
+}
+
+.deliverable-form textarea {
+  resize: vertical;
+  min-height: 40px; 
+}
+
+.deliverable-form button {
+  padding: 8px 12px;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.3s, opacity 0.3s;
+}
+
+.deliverable-form button[type="submit"] {
+  background-color: #4caf50;
+  color: white;
+}
+
+.deliverable-form button[type="button"] {
+  background-color: #f44336;
+  color: white;
+}
+
+.deliverable-form button:hover {
+  opacity: 0.85;
+}
