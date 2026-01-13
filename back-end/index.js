@@ -9,6 +9,7 @@ import userProjectRouter from "./Routes/UserProjectRoute.js";
 import permissionRouter from "./Routes/PermissionRoute.js";
 import gradeRouter from "./Routes/GradeRoute.js";
 import deliverableRouter from "./Routes/DeliverablesRoute.js";
+import "./Entities/Grades.js";
 
 env.config();
 
