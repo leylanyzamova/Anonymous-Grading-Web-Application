@@ -1,4 +1,4 @@
-import Grade from "../Entities/Grades.js";
+import Grade from "../entities/Grades.js";
 
 async function calculateFinalGrade(deliverableId) {
   const grades = await Grade.findAll({
