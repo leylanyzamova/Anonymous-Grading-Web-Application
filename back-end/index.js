@@ -1,7 +1,7 @@
 import express from "express";
 import env from "dotenv";
 import cors from "cors";
-import DB_Init from "./Entities/DbInit.js";
+import DB_Init from "./entities/DbInit.js";
 import createDbRouter from "./Routes/CreateDbRoute.js";
 import userRouter from "./Routes/UserRouter.js";
 import projectRouter from "./Routes/ProjectsRouter.js";
@@ -9,7 +9,7 @@ import userProjectRouter from "./Routes/UserProjectRoute.js";
 import permissionRouter from "./Routes/PermissionRoute.js";
 import gradeRouter from "./Routes/GradeRoute.js";
 import deliverableRouter from "./Routes/DeliverablesRoute.js";
-import "./Entities/Grades.js";
+import "./entities/Grades.js";
 
 env.config();
 
