@@ -1,6 +1,6 @@
-import Grade from "../Entities/Grades.js";
-import Deliverable from "../Entities/Deliverables.js";
-import Project from "../Entities/Projects.js";
+import Grade from "../entities/Grades.js";
+import Deliverable from "../entities/Deliverables.js";
+import Project from "../entities/Projects.js";
 
 /* ================= BASIC CRUD ================= */
 

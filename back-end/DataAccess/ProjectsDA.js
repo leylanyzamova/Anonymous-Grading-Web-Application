@@ -1,6 +1,6 @@
-import Project from "../Entities/Projects.js";
-import User from "../Entities/Users.js";
-import Permission from "../Entities/Permissions.js";
+import Project from "../entities/Projects.js";
+import User from "../entities/Users.js";
+import Permission from "../entities/Permissions.js";
 
 async function getProjects() {
   return await Project.findAll({ include: ["User"] });

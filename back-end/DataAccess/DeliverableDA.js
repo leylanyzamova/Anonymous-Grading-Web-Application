@@ -1,4 +1,4 @@
-import Deliverable from "../Entities/Deliverables.js";
+import Deliverable from "../entities/Deliverables.js";
 
 async function getDeliverables() {
   return await Deliverable.findAll({ include: ["Grades"] });

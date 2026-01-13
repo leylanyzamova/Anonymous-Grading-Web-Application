@@ -1,5 +1,5 @@
-import User from "../Entities/Users.js";
-import Project from "../Entities/Projects.js";
+import User from "../entities/Users.js";
+import Project from "../entities/Projects.js";
 
 async function getUsers() {
   return await User.findAll({ include: ["Projects"] });

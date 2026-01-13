@@ -1,4 +1,4 @@
-import Permission from "../Entities/Permissions.js";
+import Permission from "../entities/Permissions.js";
 
 /**
  * Get all permissions
