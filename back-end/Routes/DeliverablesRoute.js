@@ -8,7 +8,7 @@ import {
   deleteDeliverable,
   updateDeliverable,
 } from "../DataAccess/DeliverableDA.js";
-import { calculateFinalGrade } from "../Services/GradeSummaryService.js";
+import { calculateFinalGrade } from "../services/GradeSummaryService.js";
 
 const deliverableRouter = express.Router();
 
