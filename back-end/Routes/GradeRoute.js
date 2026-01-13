@@ -1,3 +1,12 @@
+import express from "express";
+import Deliverable from "../Entities/Deliverable.js";
+import {
+  getGradeByUserAndDeliverable,
+  createGrade
+} from "../Services/GradeService.js";
+
+const gradeRouter = express.Router();
+
 /**
  * CREATE SELF GRADE
  * - Only the deliverable owner can self-grade
@@ -12,7 +21,7 @@ gradeRouter.post("/self-grade", async (req, res) => {
       return res.status(404).json({ msg: "Deliverable not found" });
     }
 
-    // 🔐 Check ownership
+    
     if (deliverable.OwnerUserID !== UserID) {
       return res
         .status(403)
@@ -34,12 +43,15 @@ gradeRouter.post("/self-grade", async (req, res) => {
     // Force grade type = SELF
     const gradeData = {
       ...req.body,
-      GradeType: "SELF",
+      GradeType: "SELF"
     };
 
-    return res.status(201).json(await createGrade(gradeData));
+    const grade = await createGrade(gradeData);
+    return res.status(201).json(grade);
   } catch (err) {
     console.error(err);
     return res.status(500).json({ msg: "Error creating self-grade" });
   }
 });
+
+export default gradeRouter;
