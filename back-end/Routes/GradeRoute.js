@@ -3,7 +3,7 @@ import Deliverable from "../entities/deliverable.js";
 import {
   getGradeByUserAndDeliverable,
   createGrade
-} from "../Services/GradeService.js";
+} from "../services/GradeSummaryService.js";
 
 const gradeRouter = express.Router();
 
