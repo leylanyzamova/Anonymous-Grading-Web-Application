@@ -1,70 +1,73 @@
-import mysql from "mysql2/promise.js";
-import env from "dotenv";
 import User from "./Users.js";
-import Deliverable from "./Deliverables.js";
+import Deliverable from "../entities/deliverable.js";
 import Grade from "./Grades.js";
 import Permission from "./Permissions.js";
 import Project from "./Projects.js";
 
-env.config();
-
-function Create_DB() {
-  let conn;
-
-  mysql
-    .createConnection({
-      user: process.env.DB_USERNAME,
-      password: process.env.DB_PASSWORD,
-    })
-    .then((connection) => {
-      conn = connection;
-      return connection.query(
-        `CREATE DATABASE IF NOT EXISTS ${process.env.DB_DATABASE}`
-      );
-    })
-    .then(() => {
-      return conn.end();
-    })
-    .catch((err) => {
-      console.warn(err.stack);
-    });
-}
+/**
+ * Configure model relationships and sync database
+ * (SQLite / Sequelize compatible – Render-safe)
+ */
 function FK_Config() {
   User.belongsToMany(Project, {
     as: "Projects",
     through: "UserProjects",
-    foreignKey: "UserID",
+    foreignKey: "UserID"
   });
+
   Project.belongsToMany(User, {
     as: "User",
     through: "UserProjects",
-    foreignKey: "ProjectID",
+    foreignKey: "ProjectID"
   });
 
-  
-  Project.hasMany(Deliverable, { as: "Deliverables", foreignKey: "ProjectID" });
-  Deliverable.belongsTo(Project, { as: "Project", foreignKey: "ProjectID" });
+  Project.hasMany(Deliverable, {
+    as: "Deliverables",
+    foreignKey: "ProjectID"
+  });
+  Deliverable.belongsTo(Project, {
+    as: "Project",
+    foreignKey: "ProjectID"
+  });
 
- 
-  User.hasMany(Grade, { as: "Grades", foreignKey: "UserID" });
-  Grade.belongsTo(User, { as: "User", foreignKey: "UserID" });
-  
-  Deliverable.hasMany(Grade, { as: "Grades", foreignKey: "DeliverableID" });
+  User.hasMany(Grade, {
+    as: "Grades",
+    foreignKey: "UserID"
+  });
+  Grade.belongsTo(User, {
+    as: "User",
+    foreignKey: "UserID"
+  });
+
+  Deliverable.hasMany(Grade, {
+    as: "Grades",
+    foreignKey: "DeliverableID"
+  });
   Grade.belongsTo(Deliverable, {
     as: "Deliverable",
-    foreignKey: "DeliverableID",
+    foreignKey: "DeliverableID"
   });
-  
-  User.hasMany(Permission, { as: "Permissions", foreignKey: "UserID" });
-  Permission.belongsTo(User, { as: "User", foreignKey: "UserID" });
-  
-  Project.hasMany(Permission, { as: "Permissions", foreignKey: "ProjectID" });
-  Permission.belongsTo(Project, { as: "Project", foreignKey: "ProjectID" });
+
+  User.hasMany(Permission, {
+    as: "Permissions",
+    foreignKey: "UserID"
+  });
+  Permission.belongsTo(User, {
+    as: "User",
+    foreignKey: "UserID"
+  });
+
+  Project.hasMany(Permission, {
+    as: "Permissions",
+    foreignKey: "ProjectID"
+  });
+  Permission.belongsTo(Project, {
+    as: "Project",
+    foreignKey: "ProjectID"
+  });
 }
 
-function DB_Init() {
-  Create_DB();
+export default function DB_Init() {
   FK_Config();
+  console.log("Database relations configured");
 }
-
-export default DB_Init;
