@@ -14,7 +14,7 @@ const ProjectsPage = () => {
   const userType = localStorage.getItem("UserType");
 
   const calculateAverageGrade = (grades) => {
-    if (grades.length <= 2) return "Not graded";
+    if (!grades || grades.length <= 2) return "Not graded";
     const sorted = [...grades].sort((a, b) => a - b);
     sorted.pop();
     sorted.shift();
@@ -27,13 +27,17 @@ const ProjectsPage = () => {
       try {
         const projectsUrl =
           userType === "professor"
-            ? `${API_URL}/projects`
-            : `${API_URL}/userProjects/${userId}`;
+            ? `${API_URL}/api/projects`
+            : `${API_URL}/api/userProjects/${userId}`;
 
         const [projectsRes, deliverablesRes] = await Promise.all([
           fetch(projectsUrl),
-          fetch(`${API_URL}/deliverables`),
+          fetch(`${API_URL}/api/deliverables`)
         ]);
+
+        if (!projectsRes.ok || !deliverablesRes.ok) {
+          throw new Error("Failed to fetch data");
+        }
 
         const projectsData = await projectsRes.json();
         const deliverablesData = await deliverablesRes.json();
@@ -41,7 +45,7 @@ const ProjectsPage = () => {
         const gradeMap = {};
         deliverablesData.forEach((d) => {
           if (!gradeMap[d.ProjectID]) gradeMap[d.ProjectID] = [];
-          if (d.Grades) {
+          if (d.Grades && Array.isArray(d.Grades)) {
             gradeMap[d.ProjectID].push(
               ...d.Grades.map((g) => parseFloat(g.GradeValue))
             );
@@ -78,8 +82,14 @@ const ProjectsPage = () => {
           >
             <h2>{project.Title}</h2>
             <p>{project.Description}</p>
-            <a href={project.VideoLink}>Video</a><br />
-            <a href={project.DeploymentLink}>Deployment</a>
+            <a href={project.VideoLink} target="_blank" rel="noreferrer">
+              Video
+            </a>
+            <br />
+            <a href={project.DeploymentLink} target="_blank" rel="noreferrer">
+              Deployment
+            </a>
+
             {userType === "professor" && (
               <h3>Final Grade: {project.FinalGrade}</h3>
             )}
@@ -89,14 +99,19 @@ const ProjectsPage = () => {
 
       {showForm && (
         <ProjectForm
-          onSubmit={() => setProjectSubmitted(!projectSubmitted)}
+          onSubmit={() => {
+            setProjectSubmitted(!projectSubmitted);
+            setShowForm(false);
+          }}
           onCancel={() => setShowForm(false)}
         />
       )}
 
       {userType !== "professor" && (
         <div className="butoane">
-          <button onClick={() => setShowForm(true)}>Add New Project</button>
+          <button onClick={() => setShowForm(true)}>
+            Add New Project
+          </button>
           <button onClick={() => navigate(`/give-grades/${userId}`)}>
             Grade colleagues
           </button>
