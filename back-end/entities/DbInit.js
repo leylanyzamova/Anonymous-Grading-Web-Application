@@ -1,24 +1,19 @@
-import sequelize from "./db.js";
+import sequelize from "../dbConfig.js";
 
-// IMPORTANT: import ALL models so Sequelize registers tables
 import User from "./Users.js";
 import Project from "./Projects.js";
-import Deliverable from "./Deliverable.js";
+import Deliverable from "./deliverable.js";
 import Grade from "./Grades.js";
 import Permission from "./Permissions.js";
-import UserProject from "./UserProjects.js";
 
-/**
- * Configure model relationships
- */
-function FK_Config() {
+async function FK_Config() {
   User.belongsToMany(Project, {
-    through: UserProject,
+    through: "UserProjects",
     foreignKey: "UserID",
   });
 
   Project.belongsToMany(User, {
-    through: UserProject,
+    through: "UserProjects",
     foreignKey: "ProjectID",
   });
 
@@ -36,19 +31,13 @@ function FK_Config() {
 
   Project.hasMany(Permission, { foreignKey: "ProjectID" });
   Permission.belongsTo(Project, { foreignKey: "ProjectID" });
+
+  // 🔥 THIS CREATES TABLES
+  await sequelize.sync({ alter: true });
+
+  console.log("Database synced and relations configured");
 }
 
 export default async function DB_Init() {
-  try {
-    await sequelize.authenticate();
-    FK_Config();
-
-    // 🔥 THIS CREATES TABLES (FIXES "no such table: Users")
-    await sequelize.sync({ alter: true });
-
-    console.log("Database synced and relations configured");
-  } catch (err) {
-    console.error("DB INIT FAILED:", err);
-    process.exit(1);
-  }
+  await FK_Config();
 }

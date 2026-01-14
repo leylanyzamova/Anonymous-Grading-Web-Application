@@ -30,7 +30,7 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// 🔥 IMPORTANT: wait for DB before starting server
+
 (async () => {
   await DB_Init();
 
