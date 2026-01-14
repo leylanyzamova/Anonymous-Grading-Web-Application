@@ -43,7 +43,7 @@ userRouter.post("/user/signup", async (req, res) => {
       UserType: newUser.UserType,
     });
   } catch (err) {
-    console.error(err);
+    console.error("Signup error:", err);
     return res.status(500).json({ message: "Signup failed" });
   }
 });
@@ -73,43 +73,42 @@ userRouter.post("/user/login", async (req, res) => {
       UserType: user.UserType,
     });
   } catch (err) {
-    console.error(err);
+    console.error("Login error:", err);
     return res.status(500).json({ message: "Login failed" });
   }
 });
 
 /* ======================
-   BASIC CRUD (EXISTING)
+   BASIC CRUD
 ====================== */
 
-// CREATE (legacy)
 userRouter.post("/user", async (req, res) => {
   return res.status(201).json(await createUser(req.body));
 });
 
-// READ ALL
 userRouter.get("/users", async (req, res) => {
-  return res.json(await getUsers());
+  try {
+    return res.json(await getUsers());
+  } catch (err) {
+    console.error("GET /users failed:", err);
+    return res.status(500).json({ error: "DB error" });
+  }
 });
 
-// READ ONE
 userRouter.get("/user/:id", async (req, res) => {
   return res.json(await getUserById(req.params.id));
 });
 
-// DELETE
 userRouter.delete("/user/:id", async (req, res) => {
   return res.json(await deleteUser(req.params.id));
 });
 
-// UPDATE
 userRouter.put("/user/:id", async (req, res) => {
-  let ret = await updateUser(req.params.id, req.body);
+  const ret = await updateUser(req.params.id, req.body);
   if (ret.error) {
     return res.status(400).json({ error: true, msg: ret.msg });
-  } else {
-    return res.status(200).json(ret.obj);
   }
+  return res.status(200).json(ret.obj);
 });
 
 export default userRouter;
