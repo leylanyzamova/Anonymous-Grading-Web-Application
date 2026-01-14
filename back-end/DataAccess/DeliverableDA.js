@@ -1,4 +1,4 @@
-import Deliverable from "../entities/deliverable.js";
+import Deliverable from "../entities/Deliverable.js";
 
 /* ======================
    GET ALL DELIVERABLES

@@ -1,4 +1,4 @@
-import Deliverable from "../entities/deliverable.js";
+import Deliverable from "../entities/Deliverable.js";
 import User from "../entities/Users.js";
 import UserProject from "../entities/UserProjects.js";
 import Permission from "../entities/Permissions.js";
