@@ -1,68 +1,85 @@
-import Deliverable from "../entities/deliverable.js";
+import Deliverable from "../entities/Deliverables.js";
 
+/* ======================
+   GET ALL DELIVERABLES
+====================== */
 async function getDeliverables() {
-  return await Deliverable.findAll({ include: ["Grades"] });
-}
-
-//get deliverables by ProjectID
-async function getDeliverablesByProjectID(projectID) {
   return await Deliverable.findAll({
-    where: { ProjectID: projectID },
     include: ["Grades"],
   });
 }
 
-// function to get a deliverable by id
-async function getDeliverableById(id) {
-  return await Deliverable.findByPk(id);
+/* ======================
+   GET BY PROJECT ID
+====================== */
+async function getDeliverablesByProjectID(ProjectID) {
+  return await Deliverable.findAll({
+    where: { ProjectID },
+    include: ["Grades"],
+  });
 }
-//function to create a new deliverable
+
+/* ======================
+   GET ONE
+====================== */
+async function getDeliverableById(id) {
+  return await Deliverable.findByPk(id, {
+    include: ["Grades"],
+  });
+}
+
+/* ======================
+   CREATE
+====================== */
 async function createDeliverable(deliverable) {
   return await Deliverable.create(deliverable);
 }
-//function to delete a deliverable
-async function deleteDeliverable(id) {
-  let deliverable = await Deliverable.findByPk(id);
-  return await deliverable.destroy();
-}
-async function createDeliverableWithProjId(deliverable, projectID) {
-  try {
-    
-    deliverable.ProjectID = projectID;
 
-    
-    const createdDeliverable = await Deliverable.create(deliverable);
-
-    return createdDeliverable;
-  } catch (error) {
-    
-    throw error;
-  }
+/* ======================
+   CREATE WITH PROJECT ID
+====================== */
+async function createDeliverableWithProjId(deliverable, ProjectID) {
+  return await Deliverable.create({
+    ...deliverable,
+    ProjectID,
+  });
 }
 
-//function to update a deliverable
+/* ======================
+   UPDATE
+====================== */
 async function updateDeliverable(id, deliverable) {
-  try {
-    let updateDeliverable = await getDeliverableById(id);
-    if (!updateDeliverable) return { error: true, msg: "No entity found" };
-    await updateDeliverable.update(deliverable);
-    updateDeliverable = await getDeliverableById(id);
-    return {
-      error: false,
-      msg: "Deliverable updated successfully",
-      obj: updateDeliverable,
-    };
-  } catch (error) {
-    return { error: true, msg: "Error updating deliverable" };
+  const existing = await Deliverable.findByPk(id);
+  if (!existing) {
+    return { error: true, msg: "Deliverable not found" };
   }
+
+  await existing.update(deliverable);
+  return {
+    error: false,
+    obj: existing,
+  };
+}
+
+/* ======================
+   DELETE
+====================== */
+async function deleteDeliverable(id) {
+  const deliverable = await Deliverable.findByPk(id);
+  if (!deliverable) {
+    return { error: true, msg: "Deliverable not found" };
+  }
+
+  await deliverable.destroy();
+  return { error: false };
 }
 
 export {
   getDeliverables,
   getDeliverableById,
-  createDeliverable,
-  deleteDeliverable,
-  updateDeliverable,
   getDeliverablesByProjectID,
+  createDeliverable,
   createDeliverableWithProjId,
+  updateDeliverable,
+  deleteDeliverable,
 };
