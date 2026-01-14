@@ -1,5 +1,5 @@
 import Grade from "../entities/Grades.js";
-import Deliverable from "../entities/Deliverables.js";
+import Deliverable from "../entities/deliverable.js";
 import Project from "../entities/Projects.js";
 
 /* ================= BASIC CRUD ================= */
