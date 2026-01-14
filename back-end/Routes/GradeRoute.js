@@ -1,57 +1,48 @@
 import express from "express";
-import Deliverable from "../entities/Deliverable.js";
 import {
-  getGradeByUserAndDeliverable,
-  createGrade
-} from "../Services/GradeService.js";
+  getGrades,
+  createGrade,
+  deleteGrade,
+  updateGrade,
+  hasUserGradedDeliverable,
+  updateGradeByUserAndDeliverable,
+} from "../DataAccess/GradeDA.js";
 
 const gradeRouter = express.Router();
 
-/**
- * CREATE SELF GRADE
- * - Only the deliverable owner can self-grade
- * - Does NOT require jury assignment
- */
-gradeRouter.post("/self-grade", async (req, res) => {
-  try {
-    const { UserID, DeliverableID } = req.body;
+// GET all grades
+gradeRouter.get("/grades", async (req, res) => {
+  res.json(await getGrades());
+});
 
-    const deliverable = await Deliverable.findByPk(DeliverableID);
-    if (!deliverable) {
-      return res.status(404).json({ msg: "Deliverable not found" });
-    }
+// CREATE grade
+gradeRouter.post("/grade", async (req, res) => {
+  res.status(201).json(await createGrade(req.body));
+});
 
-    // ownership check
-    if (deliverable.OwnerUserID !== UserID) {
-      return res
-        .status(403)
-        .json({ msg: "You can only self-grade your own deliverable" });
-    }
+// UPDATE grade by ID
+gradeRouter.put("/grade/:id", async (req, res) => {
+  const ret = await updateGrade(req.params.id, req.body);
+  if (ret.error) return res.status(400).json(ret);
+  res.json(ret.obj);
+});
 
-    // Prevent duplicate self-grades
-    const existing = await getGradeByUserAndDeliverable(
-      UserID,
-      DeliverableID
-    );
+// UPDATE grade by user + deliverable
+gradeRouter.put("/grade/:userId/:deliverableId", async (req, res) => {
+  const ret = await updateGradeByUserAndDeliverable(
+    req.params.userId,
+    req.params.deliverableId,
+    req.body
+  );
+  if (ret.error) return res.status(400).json(ret);
+  res.json(ret.obj);
+});
 
-    if (existing) {
-      return res
-        .status(400)
-        .json({ msg: "Self-grade already exists" });
-    }
-
-    // Force grade type = SELF
-    const gradeData = {
-      ...req.body,
-      GradeType: "SELF"
-    };
-
-    const grade = await createGrade(gradeData);
-    return res.status(201).json(grade);
-  } catch (err) {
-    console.error(err);
-    return res.status(500).json({ msg: "Error creating self-grade" });
-  }
+// CHECK if user has graded deliverable
+gradeRouter.get("/hasGraded", async (req, res) => {
+  const { userId, deliverableId } = req.query;
+  const hasGraded = await hasUserGradedDeliverable(userId, deliverableId);
+  res.json({ hasGraded });
 });
 
 export default gradeRouter;
