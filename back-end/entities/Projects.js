@@ -8,24 +8,30 @@ const Project = db.define("Project", {
     autoIncrement: true,
     allowNull: false,
   },
+
   Title: {
     type: Sequelize.STRING,
     allowNull: false,
   },
+
   Description: {
     type: Sequelize.TEXT,
     allowNull: false,
   },
+
   VideoLink: {
     type: Sequelize.STRING,
     allowNull: true,
   },
+
   DeploymentLink: {
     type: Sequelize.STRING,
     allowNull: true,
   },
+
+  // ✅ MUST BE FLOAT
   FinalGrade: {
-    type: Sequelize.INTEGER,
+    type: Sequelize.FLOAT,
     allowNull: true,
   },
 });
