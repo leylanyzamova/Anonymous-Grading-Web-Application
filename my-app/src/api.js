@@ -1,2 +1,2 @@
-const API_URL = "http://localhost:8001/api";
+const API_URL = "https://anonymous-grading-web-application.onrender.com/api";
 export default API_URL;
