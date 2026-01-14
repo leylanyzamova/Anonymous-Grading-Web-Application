@@ -13,12 +13,15 @@ let projectRouter = express.Router();
 projectRouter.route("/project").post(async (req, res) => {
   return res.status(201).json(await createProject(req.body));
 });
+
 projectRouter.route("/projects").get(async (req, res) => {
   return res.json(await getProjects());
 });
+
 projectRouter.route("/project/:id").get(async (req, res) => {
   return res.json(await getProjectById(req.params.id));
 });
+
 projectRouter.route("/project/:id").delete(async (req, res) => {
   return res.json(await deleteProject(req.params.id));
 });
