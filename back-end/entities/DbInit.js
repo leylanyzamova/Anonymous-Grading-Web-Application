@@ -11,17 +11,15 @@ async function FK_Config() {
   /* ======================
      USER ↔ PROJECT (M:N)
   ====================== */
-  User.belongsToMany(Project, {
-    through: UserProject,
-    foreignKey: "UserID",
-    otherKey: "ProjectID",
-  });
+User.belongsToMany(Project, {
+  through: UserProject,
+  foreignKey: "UserID",
+});
 
-  Project.belongsToMany(User, {
-    through: UserProject,
-    foreignKey: "ProjectID",
-    otherKey: "UserID",
-  });
+Project.belongsToMany(User, {
+  through: UserProject,
+  foreignKey: "ProjectID",
+});
 
   /* ======================
      PROJECT → DELIVERABLE
@@ -54,7 +52,8 @@ async function FK_Config() {
   /* ======================
      SYNC DATABASE
   ====================== */
-  await sequelize.sync({ alter: true });
+  //await sequelize.sync({ alter: true });
+await sequelize.sync({ alter: true });
 
   console.log("Database synced and relations configured");
 }

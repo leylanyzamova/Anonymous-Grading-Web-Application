@@ -1,23 +1,20 @@
 import db from "../dbConfig.js";
 import Sequelize from "sequelize";
 
-const UserProject = db.define(
-  "UserProjects",
-  {
-    UserID: {
-      type: Sequelize.INTEGER,
-      allowNull: false,
-      primaryKey: true,
-    },
-    ProjectID: {
-      type: Sequelize.INTEGER,
-      allowNull: false,
-      primaryKey: true,
-    },
+const UserProject = db.define("UserProjects", {
+  UserProjectID: {
+    type: Sequelize.INTEGER,
+    primaryKey: true,
+    autoIncrement: true,
   },
-  {
-    timestamps: false,
-  }
-);
+  UserID: {
+    type: Sequelize.INTEGER,
+    allowNull: false,
+  },
+  ProjectID: {
+    type: Sequelize.INTEGER,
+    allowNull: false,
+  },
+});
 
 export default UserProject;
