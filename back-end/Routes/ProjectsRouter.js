@@ -8,41 +8,89 @@ import {
   getProjectsUserCanGrade,
 } from "../DataAccess/ProjectsDA.js";
 
-let projectRouter = express.Router();
+const projectRouter = express.Router();
 
-projectRouter.route("/project").post(async (req, res) => {
-  return res.status(201).json(await createProject(req.body));
-});
-
-projectRouter.route("/projects").get(async (req, res) => {
-  return res.json(await getProjects());
-});
-
-projectRouter.route("/project/:id").get(async (req, res) => {
-  return res.json(await getProjectById(req.params.id));
-});
-
-projectRouter.route("/project/:id").delete(async (req, res) => {
-  return res.json(await deleteProject(req.params.id));
-});
-
-projectRouter.route("/gradeable-projects/:userId").get(async (req, res) => {
+/* ======================
+   CREATE PROJECT
+====================== */
+projectRouter.post("/project", async (req, res) => {
   try {
-    const userId = req.params.userId;
-    const projects = await getProjectsUserCanGrade(userId);
-    return res.status(200).json(projects);
-  } catch (error) {
-    console.error("Error fetching gradeable projects:", error);
-    return res.status(500).send(error.message);
+    const project = await createProject(req.body);
+    return res.status(201).json(project);
+  } catch (err) {
+    console.error("POST /project failed:", err);
+    return res.status(500).json({ error: err.message });
   }
 });
 
-projectRouter.route("/project/:id").put(async (req, res) => {
-  let ret = await updateProject(req.params.id, req.body);
-  if (ret.error) {
-    return res.status(400).json({ error: true, msg: ret.msg });
-  } else {
+/* ======================
+   GET ALL PROJECTS
+====================== */
+projectRouter.get("/projects", async (req, res) => {
+  try {
+    const projects = await getProjects();
+    return res.json(projects);
+  } catch (err) {
+    console.error("GET /projects failed:", err);
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+/* ======================
+   GET PROJECT BY ID
+====================== */
+projectRouter.get("/project/:id", async (req, res) => {
+  try {
+    const project = await getProjectById(req.params.id);
+    if (!project) {
+      return res.status(404).json({ error: "Project not found" });
+    }
+    return res.json(project);
+  } catch (err) {
+    console.error("GET /project/:id failed:", err);
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+/* ======================
+   DELETE PROJECT
+====================== */
+projectRouter.delete("/project/:id", async (req, res) => {
+  try {
+    await deleteProject(req.params.id);
+    return res.json({ success: true });
+  } catch (err) {
+    console.error("DELETE /project/:id failed:", err);
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+/* ======================
+   UPDATE PROJECT
+====================== */
+projectRouter.put("/project/:id", async (req, res) => {
+  try {
+    const ret = await updateProject(req.params.id, req.body);
+    if (ret.error) {
+      return res.status(400).json({ error: true, msg: ret.msg });
+    }
     return res.status(200).json(ret.obj);
+  } catch (err) {
+    console.error("PUT /project/:id failed:", err);
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+/* ======================
+   GRADEABLE PROJECTS
+====================== */
+projectRouter.get("/gradeable-projects/:userId", async (req, res) => {
+  try {
+    const projects = await getProjectsUserCanGrade(req.params.userId);
+    return res.json(projects);
+  } catch (err) {
+    console.error("GET /gradeable-projects failed:", err);
+    return res.status(500).json({ error: err.message });
   }
 });
 
