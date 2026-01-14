@@ -1,15 +1,19 @@
 import Grade from "../entities/Grades.js";
-import Deliverable from "../entities/deliverable.js";
+import Deliverable from "../entities/Deliverables.js";
 import Project from "../entities/Projects.js";
 
 /* ================= BASIC CRUD ================= */
 
 async function getGrades() {
-  return await Grade.findAll();
+  return await Grade.findAll({
+    include: ["User", "Deliverable"],
+  });
 }
 
 async function getGradeById(id) {
-  return await Grade.findByPk(id);
+  return await Grade.findByPk(id, {
+    include: ["User", "Deliverable"],
+  });
 }
 
 async function createGrade(grade) {
@@ -18,127 +22,100 @@ async function createGrade(grade) {
 
 async function deleteGrade(id) {
   const grade = await Grade.findByPk(id);
-  return await grade.destroy();
+  if (!grade) {
+    return { error: true, msg: "Grade not found" };
+  }
+
+  await grade.destroy();
+  return { error: false };
 }
 
-async function updateGrade(id, grade) {
-  try {
-    let updateGrade = await getGradeById(id);
-    if (!updateGrade) return { error: true, msg: "No entity found" };
-
-    await updateGrade.update(grade);
-    updateGrade = await getGradeById(id);
-
-    return {
-      error: false,
-      msg: "Grade updated successfully",
-      obj: updateGrade,
-    };
-  } catch {
-    return { error: true, msg: "Error updating grade" };
+async function updateGrade(id, gradeData) {
+  const grade = await Grade.findByPk(id);
+  if (!grade) {
+    return { error: true, msg: "Grade not found" };
   }
+
+  await grade.update(gradeData);
+  return {
+    error: false,
+    obj: grade,
+  };
 }
 
 /* ================= DELIVERABLE-BASED ================= */
 
-async function hasUserGradedDeliverable(userId, deliverableId) {
+async function hasUserGradedDeliverable(UserID, DeliverableID) {
   const grade = await Grade.findOne({
-    where: {
-      UserID: userId,
-      DeliverableID: deliverableId,
-    },
+    where: { UserID, DeliverableID },
   });
   return grade !== null;
 }
 
-async function getGradeByUserAndDeliverable(userId, deliverableId) {
+async function getGradeByUserAndDeliverable(UserID, DeliverableID) {
   return await Grade.findOne({
-    where: {
-      UserID: userId,
-      DeliverableID: deliverableId,
-    },
+    where: { UserID, DeliverableID },
   });
 }
 
 async function updateGradeByUserAndDeliverable(
-  userId,
-  deliverableId,
+  UserID,
+  DeliverableID,
   newGradeData
 ) {
-  try {
-    const grade = await Grade.findOne({
-      where: {
-        UserID: userId,
-        DeliverableID: deliverableId,
-      },
-    });
+  const grade = await Grade.findOne({
+    where: { UserID, DeliverableID },
+  });
 
-    if (!grade) {
-      return { error: true, msg: "Grade not found" };
-    }
-
-    await grade.update(newGradeData);
-
-    return {
-      error: false,
-      msg: "Grade updated successfully",
-      obj: grade,
-    };
-  } catch {
-    return { error: true, msg: "Error updating grade" };
+  if (!grade) {
+    return { error: true, msg: "Grade not found" };
   }
+
+  await grade.update(newGradeData);
+  return {
+    error: false,
+    obj: grade,
+  };
 }
 
 /* ================= FINAL PROJECT GRADE ================= */
 
-/**
- * Calculates and saves the final project grade:
- * - collect all grades for all deliverables
- * - remove lowest and highest
- * - average remaining
- * - round to 2 decimals
- */
-async function calculateFinalProjectGrade(projectId) {
-  // 1. Get all deliverables of project
+async function calculateFinalProjectGrade(ProjectID) {
   const deliverables = await Deliverable.findAll({
-    where: { ProjectID: projectId },
+    where: { ProjectID },
   });
 
-  if (deliverables.length === 0) return null;
+  if (deliverables.length < 1) return null;
 
-  const deliverableIds = deliverables.map(d => d.DeliverableID);
+  const deliverableIds = deliverables.map(
+    (d) => d.DeliverableID
+  );
 
-  // 2. Get all grades for those deliverables
   const grades = await Grade.findAll({
-    where: {
-      DeliverableID: deliverableIds,
-    },
+    where: { DeliverableID: deliverableIds },
   });
 
   if (grades.length < 3) return null;
 
-  // 3. Extract numeric values
-  let values = grades.map(g => parseFloat(g.GradeValue));
+  let values = grades.map((g) =>
+    parseFloat(g.GradeValue)
+  );
 
-  // 4. Sort and remove min & max
   values.sort((a, b) => a - b);
   values.shift(); // remove lowest
-  values.pop();   // remove highest
+  values.pop(); // remove highest
 
   if (values.length === 0) return null;
 
-  // 5. Average
   const avg =
     values.reduce((sum, v) => sum + v, 0) / values.length;
 
   const finalGrade = Number(avg.toFixed(2));
 
-  // 6. Save to project
-  const project = await Project.findByPk(projectId);
+  const project = await Project.findByPk(ProjectID);
   if (!project) return null;
 
   await project.update({ FinalGrade: finalGrade });
-
   return finalGrade;
 }
 
