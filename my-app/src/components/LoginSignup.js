@@ -6,7 +6,6 @@ import { faUser, faEnvelope } from "@fortawesome/free-regular-svg-icons";
 import { faLock } from "@fortawesome/free-solid-svg-icons";
 import API_URL from "../api";
 
-
 const LoginSignup = () => {
   const [action, setAction] = useState("Sign Up");
   const navigate = useNavigate();
@@ -16,25 +15,28 @@ const LoginSignup = () => {
     const username = document.querySelector('input[type="text"]')?.value;
     const password = document.querySelector('input[type="password"]')?.value;
 
-    if (action === "Login") {
-      try {
-        const usersResponse = await fetch(`${API_URL}/users`);
-        const users = await usersResponse.json();
+    try {
+      if (action === "Login") {
+        // ✅ LOGIN
+        const response = await fetch(`${API_URL}/api/user/login`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username, password }),
+        });
 
-        const user = users.find((u) => u.UserName === username);
-        if (!user || user.Password !== password) {
+        if (!response.ok) {
           alert("Invalid username or password");
           return;
         }
 
+        const user = await response.json();
+
+        localStorage.setItem("UserID", user.UserID);
         localStorage.setItem("UserType", user.UserType);
+
         navigate(`/projects/${user.UserID}`);
-      } catch (err) {
-        console.error(err);
-        alert("Login failed");
-      }
-    } else {
-      try {
+      } else {
+        // ✅ SIGN UP
         if (!email || !username || !password) {
           alert("All fields are required");
           return;
@@ -48,17 +50,15 @@ const LoginSignup = () => {
           return;
         }
 
-        const newUser = {
-          Email: email,
-          UserName: username,
-          Password: password,
-          UserType: roleInput.value,
-        };
-
-        const response = await fetch(`${API_URL}/user`, {
+        const response = await fetch(`${API_URL}/api/user/signup`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(newUser),
+          body: JSON.stringify({
+            Email: email,
+            UserName: username,
+            Password: password,
+            UserType: roleInput.value,
+          }),
         });
 
         if (!response.ok) {
@@ -68,10 +68,10 @@ const LoginSignup = () => {
 
         alert("Account created successfully. Please login.");
         setAction("Login");
-      } catch (err) {
-        console.error(err);
-        alert("Signup failed");
       }
+    } catch (err) {
+      console.error(err);
+      alert("Server error");
     }
   };
 
