@@ -22,10 +22,10 @@ userRouter.post("/user/signup", async (req, res) => {
       return res.status(400).json({ message: "Missing fields" });
     }
 
-    const users = await getUsers();
-    const exists = users.find((u) => u.UserName === UserName);
+    // ✅ DO NOT load all users – query properly
+    const existingUser = await getUserById({ UserName });
 
-    if (exists) {
+    if (existingUser) {
       return res.status(409).json({ message: "User already exists" });
     }
 
@@ -55,8 +55,12 @@ userRouter.post("/user/login", async (req, res) => {
   try {
     const { username, password } = req.body;
 
-    const users = await getUsers();
-    const user = users.find((u) => u.UserName === username);
+    if (!username || !password) {
+      return res.status(400).json({ message: "Missing credentials" });
+    }
+
+    // ✅ DO NOT fetch all users
+    const user = await getUserById({ UserName: username });
 
     if (!user) {
       return res.status(401).json({ message: "Invalid credentials" });
@@ -68,7 +72,7 @@ userRouter.post("/user/login", async (req, res) => {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    return res.json({
+    return res.status(200).json({
       UserID: user.UserID,
       UserType: user.UserType,
     });
@@ -83,12 +87,19 @@ userRouter.post("/user/login", async (req, res) => {
 ====================== */
 
 userRouter.post("/user", async (req, res) => {
-  return res.status(201).json(await createUser(req.body));
+  try {
+    const user = await createUser(req.body);
+    return res.status(201).json(user);
+  } catch (err) {
+    console.error("Create user failed:", err);
+    return res.status(500).json({ error: "DB error" });
+  }
 });
 
 userRouter.get("/users", async (req, res) => {
   try {
-    return res.json(await getUsers());
+    const users = await getUsers();
+    return res.status(200).json(users);
   } catch (err) {
     console.error("GET /users failed:", err);
     return res.status(500).json({ error: "DB error" });
@@ -96,19 +107,34 @@ userRouter.get("/users", async (req, res) => {
 });
 
 userRouter.get("/user/:id", async (req, res) => {
-  return res.json(await getUserById(req.params.id));
+  try {
+    const user = await getUserById(req.params.id);
+    if (!user) return res.status(404).json({ error: "User not found" });
+    return res.json(user);
+  } catch (err) {
+    return res.status(500).json({ error: "DB error" });
+  }
 });
 
 userRouter.delete("/user/:id", async (req, res) => {
-  return res.json(await deleteUser(req.params.id));
+  try {
+    await deleteUser(req.params.id);
+    return res.status(204).end();
+  } catch (err) {
+    return res.status(500).json({ error: "DB error" });
+  }
 });
 
 userRouter.put("/user/:id", async (req, res) => {
-  const ret = await updateUser(req.params.id, req.body);
-  if (ret.error) {
-    return res.status(400).json({ error: true, msg: ret.msg });
+  try {
+    const ret = await updateUser(req.params.id, req.body);
+    if (ret.error) {
+      return res.status(400).json({ error: true, msg: ret.msg });
+    }
+    return res.status(200).json(ret.obj);
+  } catch (err) {
+    return res.status(500).json({ error: "DB error" });
   }
-  return res.status(200).json(ret.obj);
 });
 
 export default userRouter;
