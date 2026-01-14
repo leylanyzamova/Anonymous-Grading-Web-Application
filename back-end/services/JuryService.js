@@ -1,7 +1,7 @@
-import Deliverable from "../Entities/Deliverables.js";
-import User from "../Entities/Users.js";
-import UserProject from "../Entities/UserProjects.js";
-import Permission from "../Entities/Permissions.js";
+import Deliverable from "../entities/Deliverables.js";
+import User from "../entities/Users.js";
+import UserProject from "../entities/UserProjects.js";
+import Permission from "../entities/Permissions.js";
 
 const JURY_SIZE = 3;
 const MODIFY_WINDOW_HOURS = 48;

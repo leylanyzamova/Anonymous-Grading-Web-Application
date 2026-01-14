@@ -5,6 +5,7 @@ import API_URL from "../api";
 
 const DeliverablesGrades = () => {
   const { userId, projectID } = useParams();
+
   const [deliverables, setDeliverables] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showGradeModal, setShowGradeModal] = useState(false);
@@ -16,19 +17,23 @@ const DeliverablesGrades = () => {
 
   const navigate = useNavigate();
 
+  // ===============================
+  // EDIT GRADE
+  // ===============================
   const handleGradeEditClick = async (deliverable) => {
     try {
-      const gradeDeadlineResponse = await fetch(
-        `http://localhost:9000/api/permissions/deadline/${userId}/${projectID}`
+      const deadlineRes = await fetch(
+        `${API_URL}/api/permissions/deadline/${userId}/${projectID}`
       );
-      const { GradeModificationDeadline } = await gradeDeadlineResponse.json();
+      const { GradeModificationDeadline } = await deadlineRes.json();
+
       const deadline = new Date(GradeModificationDeadline);
       const now = new Date();
 
-      const hasGradedResponse = await fetch(
-        `http://localhost:9000/api/hasGraded?userId=${userId}&deliverableId=${deliverable.DeliverableID}`
+      const hasGradedRes = await fetch(
+        `${API_URL}/api/hasGraded?userId=${userId}&deliverableId=${deliverable.DeliverableID}`
       );
-      const { hasGraded } = await hasGradedResponse.json();
+      const { hasGraded } = await hasGradedRes.json();
 
       if (hasGraded && now < deadline) {
         setSelectedDeliverable(deliverable);
@@ -37,157 +42,121 @@ const DeliverablesGrades = () => {
       } else {
         alert("You cannot edit the grade for this deliverable.");
       }
-    } catch (error) {
-      console.error("Error checking grade status or deadline:", error);
+    } catch (err) {
+      console.error("Grade edit error:", err);
     }
   };
 
-  const handleGradeUpdate = async (event) => {
-    event.preventDefault();
+  // ===============================
+  // UPDATE GRADE
+  // ===============================
+  const handleGradeUpdate = async (e) => {
+    e.preventDefault();
+
     const gradeValue = parseFloat(grade);
-
-    if (gradeValue >= 1.0 && gradeValue <= 10.0) {
-      const deliverableId = selectedDeliverable.DeliverableID;
-      try {
-        const response = await fetch(
-          `http://localhost:9000/api/grade/${userId}/${deliverableId}`,
-          {
-            method: "PUT",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              GradeValue: gradeValue,
-              GradeDate: new Date().toISOString(),
-            }),
-          }
-        );
-
-        if (response.ok) {
-          resetModal();
-
-          setShowGradeModal(false);
-          const newGradesResponse = await fetch(
-            "http://localhost:9000/api/grades"
-          );
-          const newGradesData = await newGradesResponse.json();
-          setGradesData(newGradesData);
-        } else {
-          console.error("Failed to update grade:", await response.json());
-        }
-      } catch (error) {
-        console.error("Error updating grade:", error);
-      }
-    } else {
-      alert("Please enter a valid grade between 1.00 and 10.00.");
+    if (gradeValue < 1 || gradeValue > 10) {
+      alert("Grade must be between 1 and 10");
+      return;
     }
-  };
 
-  const handleCardClick = async (deliverable) => {
     try {
-      const response = await fetch(
-        `http://localhost:9000/api/hasGraded?userId=${userId}&deliverableId=${deliverable.DeliverableID}`
-      );
-      const { hasGraded } = await response.json();
-
-      if (hasGraded) {
-        alert("You have already graded this deliverable.");
-      } else {
-        setSelectedDeliverable(deliverable);
-        setShowGradeModal(true);
-      }
-    } catch (error) {
-      console.error("Error checking grade status:", error);
-    }
-  };
-
-  const handleGradeChange = (event) => {
-    setGrade(event.target.value);
-  };
-
-  const handleGradeSubmit = async (event) => {
-    event.preventDefault();
-    const gradeValue = parseFloat(grade);
-
-    if (gradeValue >= 1.0 && gradeValue <= 10.0) {
-      const deliverableId = selectedDeliverable.DeliverableID;
-      if (gradedDeliverableIds.includes(deliverableId)) {
-        alert("You have already graded this deliverable.");
-      } else {
-        try {
-          const response = await fetch("http://localhost:9000/api/grade", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              UserID: userId,
-              DeliverableID: selectedDeliverable.DeliverableID,
-              GradeValue: gradeValue,
-              GradeDate: new Date().toISOString(),
-            }),
-          });
-
-          const data = await response.json();
-          if (response.ok) {
-            setShowGradeModal(false);
-            setGradedDeliverableIds([...gradedDeliverableIds, deliverableId]);
-            const newGradesResponse = await fetch(
-              "http://localhost:9000/api/grades"
-            );
-            const newGradesData = await newGradesResponse.json();
-            setGradesData(newGradesData);
-          } else {
-            console.error("Failed to submit grade:", data);
-          }
-        } catch (error) {
-          console.error("Error submitting grade:", error);
+      const res = await fetch(
+        `${API_URL}/api/grade/${userId}/${selectedDeliverable.DeliverableID}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            GradeValue: gradeValue,
+            GradeDate: new Date().toISOString(),
+          }),
         }
-      }
-    } else {
-      alert("Please enter a valid grade between 1.00 and 10.00.");
+      );
+
+      if (!res.ok) throw new Error("Update failed");
+
+      resetModal();
+      fetchGrades();
+    } catch (err) {
+      console.error(err);
     }
+  };
+
+  // ===============================
+  // ADD GRADE
+  // ===============================
+  const handleGradeSubmit = async (e) => {
+    e.preventDefault();
+
+    const gradeValue = parseFloat(grade);
+    if (gradeValue < 1 || gradeValue > 10) {
+      alert("Grade must be between 1 and 10");
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API_URL}/api/grade`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          UserID: userId,
+          DeliverableID: selectedDeliverable.DeliverableID,
+          GradeValue: gradeValue,
+          GradeDate: new Date().toISOString(),
+        }),
+      });
+
+      if (!res.ok) throw new Error("Submit failed");
+
+      resetModal();
+      fetchGrades();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  // ===============================
+  // FETCH DATA
+  // ===============================
+  const fetchGrades = async () => {
+    const res = await fetch(`${API_URL}/api/grades`);
+    const data = await res.json();
+    setGradesData(data);
+
+    const gradedIds = data
+      .filter((g) => g.UserID === Number(userId))
+      .map((g) => g.DeliverableID);
+
+    setGradedDeliverableIds(gradedIds);
   };
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
-
       try {
-        const deliverablesResponse = await fetch(
-          `http://localhost:9000/api/deliverables/${projectID}`
-        );
-        const gradesResponse = await fetch("http://localhost:9000/api/grades");
-
-        const [deliverablesData, gradesData] = await Promise.all([
-          deliverablesResponse.json(),
-          gradesResponse.json(),
+        const [delivRes, gradesRes] = await Promise.all([
+          fetch(`${API_URL}/api/deliverables/${projectID}`),
+          fetch(`${API_URL}/api/grades`),
         ]);
 
-        const userGradedDeliverablesIds = gradesData
-          .filter((grade) => grade.UserID === userId)
-          .map((grade) => grade.DeliverableID);
+        const deliverablesData = await delivRes.json();
+        const gradesData = await gradesRes.json();
 
-        setGradedDeliverableIds(userGradedDeliverablesIds);
+        const gradedIds = gradesData
+          .filter((g) => g.UserID === Number(userId))
+          .map((g) => g.DeliverableID);
 
-        if (Array.isArray(deliverablesData)) {
-          const deliverablesWithGradingStatus = deliverablesData.map(
-            (deliverable) => ({
-              ...deliverable,
-              hasGraded: userGradedDeliverablesIds.includes(
-                deliverable.DeliverableID
-              ),
-            })
-          );
-          setDeliverables(deliverablesWithGradingStatus);
-        } else {
-          console.error(
-            "Invalid response format for deliverables:",
-            deliverablesData
-          );
-        }
-      } catch (error) {
-        console.error("Error fetching data:", error);
+        setGradedDeliverableIds(gradedIds);
+
+        setDeliverables(
+          deliverablesData.map((d) => ({
+            ...d,
+            hasGraded: gradedIds.includes(d.DeliverableID),
+          }))
+        );
+
+        setGradesData(gradesData);
+      } catch (err) {
+        console.error("Fetch error:", err);
       } finally {
         setLoading(false);
       }
@@ -207,64 +176,49 @@ const DeliverablesGrades = () => {
     <div className="deliverables-container">
       {loading ? (
         <p>Loading...</p>
-      ) : deliverables && deliverables.length ? (
+      ) : deliverables.length ? (
         <div className="deliverables-list">
-          {deliverables.map((deliverable) => (
-            <div className="deliverable-card" key={deliverable.DeliverableID}>
-              <h2>{deliverable.Title}</h2>
-              <p>{deliverable.Description}</p>
-              <p>
-                Due Date: {new Date(deliverable.DueDate).toLocaleDateString()}
-              </p>
-              <button
-                id="goBackBtn"
-                onClick={() => handleGradeEditClick(deliverable)}
-              >
+          {deliverables.map((d) => (
+            <div key={d.DeliverableID} className="deliverable-card">
+              <h2>{d.Title}</h2>
+              <p>{d.Description}</p>
+              <p>{new Date(d.DueDate).toLocaleDateString()}</p>
+
+              <button onClick={() => handleGradeEditClick(d)}>
                 Edit Grade
               </button>
               <button
-                id="goBackBtn"
-                onClick={() => handleCardClick(deliverable, gradesData)}
+                onClick={() => {
+                  setSelectedDeliverable(d);
+                  setShowGradeModal(true);
+                }}
               >
-                {" "}
                 Add Grade
               </button>
             </div>
           ))}
-          <div className="butoane">
-            <button id="goBackBtn" onClick={() => navigate(-1)}>
-              Go Back
-            </button>
-          </div>
+
+          <button onClick={() => navigate(-1)}>Go Back</button>
         </div>
       ) : (
-        <div className="butoane">
-          <button id="goBackBtn" onClick={() => navigate(-1)}>
-            No deliverables, go Back
-          </button>
-        </div>
+        <button onClick={() => navigate(-1)}>No deliverables, Go Back</button>
       )}
+
       {showGradeModal && (
         <div className="modal">
           <div className="modal-content">
-            <span
-              className="close-button"
-              onClick={() => setShowGradeModal(false)}
-            >
+            <span className="close-button" onClick={resetModal}>
               &times;
             </span>
-            <h2>Enter Grade for {selectedDeliverable?.Title}</h2>
-            <form
-              onSubmit={isEditingGrade ? handleGradeUpdate : handleGradeSubmit}
-            >
+            <h2>{selectedDeliverable?.Title}</h2>
+            <form onSubmit={isEditingGrade ? handleGradeUpdate : handleGradeSubmit}>
               <input
                 type="number"
-                min="1.00"
-                max="10.00"
+                min="1"
+                max="10"
                 step="0.01"
                 value={grade}
-                onChange={handleGradeChange}
-                required
+                onChange={(e) => setGrade(e.target.value)}
               />
               <button type="submit">
                 {isEditingGrade ? "Update Grade" : "Submit Grade"}

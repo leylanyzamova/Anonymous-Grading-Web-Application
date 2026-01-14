@@ -17,7 +17,6 @@ const LoginSignup = () => {
 
     try {
       if (action === "Login") {
-        // ✅ LOGIN
         const response = await fetch(`${API_URL}/api/user/login`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -30,13 +29,10 @@ const LoginSignup = () => {
         }
 
         const user = await response.json();
-
         localStorage.setItem("UserID", user.UserID);
         localStorage.setItem("UserType", user.UserType);
-
         navigate(`/projects/${user.UserID}`);
       } else {
-        // ✅ SIGN UP
         if (!email || !username || !password) {
           alert("All fields are required");
           return;
@@ -62,7 +58,7 @@ const LoginSignup = () => {
         });
 
         if (!response.ok) {
-          alert("User already exists or error creating user");
+          alert("Signup failed");
           return;
         }
 

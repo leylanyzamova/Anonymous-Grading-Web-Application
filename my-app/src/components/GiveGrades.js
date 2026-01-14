@@ -7,52 +7,85 @@ const GiveGrades = () => {
   const { userId } = useParams();
   const navigate = useNavigate();
   const [projects, setProjects] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchProjects = async () => {
       try {
         const response = await fetch(
-          `http://localhost:9000/api/gradeable-projects/${userId}`
+          `${API_URL}/api/gradeable-projects/${userId}`
         );
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch gradeable projects");
+        }
+
         const data = await response.json();
+
         if (Array.isArray(data)) {
           setProjects(data);
         } else {
-          console.error("Data is not an array:", data);
+          console.error("Expected array, got:", data);
         }
       } catch (error) {
         console.error("Fetching gradeable projects failed:", error);
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchProjects();
   }, [userId]);
 
-  // Function to navigate back to the ProjectsPage
   const goToProjects = () => {
     navigate(`/projects/${userId}`);
   };
+
   const navigateToDeliverablesGrade = (projectId) => {
     navigate(`/deliverables-grade/${userId}/${projectId}`);
   };
 
   return (
     <div className="projects-container">
-      <div className="projects-list">
-        {projects.map((project) => (
-          <div
-            className="project-card"
-            key={project.ProjectID}
-            onClick={() => navigateToDeliverablesGrade(project.ProjectID)}
-          >
-            <h2>{project.Title}</h2>
-            <p>{project.Description}</p>
-            <a href={project.VideoLink}>Video Link</a>
-            <p></p>
-            <a href={project.DeploymentLink}>Deployment Link</a>
-          </div>
-        ))}
-      </div>
+      {loading ? (
+        <p>Loading...</p>
+      ) : projects.length ? (
+        <div className="projects-list">
+          {projects.map((project) => (
+            <div
+              className="project-card"
+              key={project.ProjectID}
+              onClick={() => navigateToDeliverablesGrade(project.ProjectID)}
+            >
+              <h2>{project.Title}</h2>
+              <p>{project.Description}</p>
+
+              {project.VideoLink && (
+                <a
+                  href={project.VideoLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Video Link
+                </a>
+              )}
+
+              {project.DeploymentLink && (
+                <a
+                  href={project.DeploymentLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Deployment Link
+                </a>
+              )}
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p>No projects available for grading.</p>
+      )}
+
       <button id="giveGrades" onClick={goToProjects}>
         Back to Projects
       </button>

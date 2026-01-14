@@ -4,7 +4,6 @@ import DeliverableForm from "./DeliverableForm";
 import "../components-css/Deliverables.css";
 import API_URL from "../api";
 
-
 const Deliverables = () => {
   const { projectID } = useParams();
   const [deliverables, setDeliverables] = useState([]);
@@ -15,17 +14,12 @@ const Deliverables = () => {
   const fetchDeliverables = async () => {
     try {
       const response = await fetch(
-        `http://localhost:9000/api/deliverables/${projectID}`
+        `${API_URL}/api/deliverables/${projectID}`
       );
-
       const data = await response.json();
-      if (Array.isArray(data)) {
-        setDeliverables(data);
-      } else {
-        console.error("Invalid response format:", data);
-      }
-    } catch (error) {
-      console.error("Error fetching deliverables:", error);
+      setDeliverables(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error(err);
     } finally {
       setLoading(false);
     }
@@ -36,65 +30,41 @@ const Deliverables = () => {
   }, [projectID]);
 
   const handleNewDeliverableSubmit = async (formData) => {
-    try {
-      const response = await fetch(
-        `http://localhost:9000/api/deliverable/${projectID}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(formData),
-        }
-      );
-
-      const data = await response.json();
-      if (data) {
-        fetchDeliverables();
-        setShowForm(false);
-      }
-    } catch (error) {
-      console.error("Error adding deliverable:", error);
-    }
+    await fetch(`${API_URL}/api/deliverable/${projectID}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(formData),
+    });
+    fetchDeliverables();
+    setShowForm(false);
   };
 
   return (
     <div className="deliverables-container">
       {loading ? (
         <p>Loading...</p>
-      ) : deliverables && deliverables.length ? (
+      ) : deliverables.length ? (
         <div className="deliverables-list">
-          {deliverables.map((deliverable) => (
-            <div className="deliverable-card" key={deliverable.DeliverableID}>
-              <h2>{deliverable.Title}</h2>
-              <p>{deliverable.Description}</p>
-              <p>
-                Due Date: {new Date(deliverable.DueDate).toLocaleDateString()}
-              </p>
+          {deliverables.map((d) => (
+            <div className="deliverable-card" key={d.DeliverableID}>
+              <h2>{d.Title}</h2>
+              <p>{d.Description}</p>
+              <p>{new Date(d.DueDate).toLocaleDateString()}</p>
             </div>
           ))}
-          <div className="butoane">
-            <button id="addDeliv" onClick={() => setShowForm(true)}>
-              Add New Deliverables
-            </button>
-            <button id="goBackBtn" onClick={() => navigate(-1)}>
-              Go Back
-            </button>
-          </div>
+          <button onClick={() => setShowForm(true)}>Add Deliverable</button>
+          <button onClick={() => navigate(-1)}>Go Back</button>
         </div>
       ) : (
         <p>No deliverables found.</p>
       )}
+
       {showForm && (
-        <div className="modal">
-          <div className="modal-content">
-            <DeliverableForm
-              onSubmit={handleNewDeliverableSubmit}
-              onCancel={() => setShowForm(false)}
-              ProjectID={projectID} 
-            />
-          </div>
-        </div>
+        <DeliverableForm
+          ProjectID={projectID}
+          onSubmit={handleNewDeliverableSubmit}
+          onCancel={() => setShowForm(false)}
+        />
       )}
     </div>
   );
